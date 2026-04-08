@@ -1,8 +1,20 @@
 /* =========================================
-   0. 🔴 UI HOTFIX INJECTIONS (Modal Spacing, Loading & MOBILE FIXES)
+   0. 🔴 UI HOTFIX INJECTIONS & MOBILE ENGINE (v2)
    ========================================= */
 const globalStyles = document.createElement('style');
 globalStyles.innerHTML = `
+    /* 🛑 NUCLEAR FIX FOR HORIZONTAL SCROLLING (WHITE SPACE) */
+    html, body {
+        overflow-x: hidden !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        margin: 0; padding: 0;
+        box-sizing: border-box;
+    }
+    *, *::before, *::after {
+        box-sizing: inherit;
+    }
+
     #modalImg {
         width: 100% !important; height: 100% !important; min-height: 300px;
         object-fit: cover !important; border-radius: 12px;
@@ -10,7 +22,6 @@ globalStyles.innerHTML = `
         transition: opacity 0.3s ease-in-out;
     }
     
-    /* Advanced Animations for Payment UI */
     @keyframes popInUI { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     @keyframes rotateSpinner { 100% { transform: rotate(360deg); } }
     @keyframes dashSpinner { 0% { stroke-dasharray: 1, 150; stroke-dashoffset: 0; } 50% { stroke-dasharray: 90, 150; stroke-dashoffset: -35; } 100% { stroke-dasharray: 90, 150; stroke-dashoffset: -124; } }
@@ -18,10 +29,10 @@ globalStyles.innerHTML = `
     @keyframes scaleCheck { 0% { transform: scale(0); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
 
     /* =========================================
-       📱 MOBILE RESPONSIVE ENGINE
+       📱 MOBILE RESPONSIVE ENGINE (Anti-Overflow)
        ========================================= */
     @media screen and (max-width: 850px) {
-        /* 1. Fix Top Navbar Squishing */
+        /* 1. Fix Top Navbar & Hidden Buttons */
         header, .nav-container, .navbar {
             display: flex !important;
             flex-direction: column !important;
@@ -29,12 +40,17 @@ globalStyles.innerHTML = `
             padding: 15px 10px !important;
             height: auto !important;
             gap: 15px !important;
+            width: 100% !important;
+            overflow: hidden !important;
         }
         .search-container {
             width: 100% !important;
             max-width: 100% !important;
             margin: 0 !important;
+            box-sizing: border-box !important;
         }
+        
+        /* 2. Fix the Login/Register Buttons getting cut off */
         #authContainer, .nav-links {
             display: flex !important;
             flex-wrap: wrap !important;
@@ -42,58 +58,35 @@ globalStyles.innerHTML = `
             gap: 10px !important;
             width: 100% !important;
         }
+        .nav-btn-styled {
+            margin: 0 !important; /* Removes the left-margin pushing it off screen */
+            flex: 1 1 auto !important; 
+            text-align: center !important;
+            justify-content: center !important;
+            min-width: 120px !important;
+        }
 
-        /* 2. Fix Medicine Grid (2 columns instead of 3/4) */
+        /* 3. Fix Medicine Grid (2 columns instead of 3/4) */
         #medicineGrid {
             grid-template-columns: repeat(2, 1fr) !important;
-            gap: 12px !important;
+            gap: 10px !important;
             padding: 10px !important;
-        }
-        .med-card {
-            margin: 0 !important;
-        }
-        .med-card-img {
-            height: 140px !important; 
-        }
-
-        /* 3. Fix Cart Page (Stack vertical & make table swipeable) */
-        .cart-container {
-            display: flex !important;
-            flex-direction: column !important;
-            padding: 10px !important;
-            margin: 20px auto !important;
-        }
-        #cartItemsContainer {
             width: 100% !important;
-            overflow-x: auto !important; /* Swipeable table */
-            -webkit-overflow-scrolling: touch;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
-        .data-table {
-            min-width: 600px !important; /* Prevents text from crushing */
-        }
-        #cartSummary {
-            width: 100% !important;
-            margin-top: 20px !important;
             box-sizing: border-box !important;
         }
-        
-        /* 4. Fix Modals */
-        .product-modal-box {
-            width: 95% !important;
-            padding: 20px !important;
-            margin: 10px !important;
-            max-height: 90vh !important;
-            overflow-y: auto !important;
-        }
+        .med-card { margin: 0 !important; width: 100% !important; box-sizing: border-box !important; }
+        .med-card-img { height: 140px !important; }
+
+        /* 4. Fix Cart & Modals */
+        .cart-container { display: flex !important; flex-direction: column !important; padding: 10px !important; margin: 20px auto !important; width: 100% !important; box-sizing: border-box !important; }
+        #cartItemsContainer { width: 100% !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+        .data-table { min-width: 600px !important; }
+        #cartSummary { width: 100% !important; margin-top: 20px !important; box-sizing: border-box !important; }
+        .product-modal-box { width: 95% !important; padding: 20px !important; margin: 10px !important; }
     }
 
     @media screen and (max-width: 480px) {
-        /* Very small phones get 1 column */
-        #medicineGrid {
-            grid-template-columns: 1fr !important;
-        }
+        #medicineGrid { grid-template-columns: 1fr !important; } /* 1 column for very small phones */
     }
 `;
 document.head.appendChild(globalStyles);
