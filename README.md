@@ -38,7 +38,7 @@ Unlike standard student projects, MediShop utilizes enterprise-level software op
 
 **1. Clone the repository:**
 \`\`\`bash
-git clone https://github.com/yourusername/medishop.git
+git clone https://github.com/viraj-thakor/Medishop-E-Pharmacy.git
 \`\`\`
 
 **2. Start the Backend Server:**
