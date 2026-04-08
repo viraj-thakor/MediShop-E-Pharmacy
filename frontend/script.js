@@ -1,5 +1,5 @@
 /* =========================================
-   0. 🔴 UI HOTFIX INJECTIONS (Modal Spacing & Loading)
+   0. 🔴 UI HOTFIX INJECTIONS (Modal Spacing, Loading & MOBILE FIXES)
    ========================================= */
 const globalStyles = document.createElement('style');
 globalStyles.innerHTML = `
@@ -16,6 +16,85 @@ globalStyles.innerHTML = `
     @keyframes dashSpinner { 0% { stroke-dasharray: 1, 150; stroke-dashoffset: 0; } 50% { stroke-dasharray: 90, 150; stroke-dashoffset: -35; } 100% { stroke-dasharray: 90, 150; stroke-dashoffset: -124; } }
     .success-checkmark { animation: scaleCheck 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
     @keyframes scaleCheck { 0% { transform: scale(0); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+
+    /* =========================================
+       📱 MOBILE RESPONSIVE ENGINE
+       ========================================= */
+    @media screen and (max-width: 850px) {
+        /* 1. Fix Top Navbar Squishing */
+        header, .nav-container, .navbar {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            padding: 15px 10px !important;
+            height: auto !important;
+            gap: 15px !important;
+        }
+        .search-container {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+        }
+        #authContainer, .nav-links {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            justify-content: center !important;
+            gap: 10px !important;
+            width: 100% !important;
+        }
+
+        /* 2. Fix Medicine Grid (2 columns instead of 3/4) */
+        #medicineGrid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 12px !important;
+            padding: 10px !important;
+        }
+        .med-card {
+            margin: 0 !important;
+        }
+        .med-card-img {
+            height: 140px !important; 
+        }
+
+        /* 3. Fix Cart Page (Stack vertical & make table swipeable) */
+        .cart-container {
+            display: flex !important;
+            flex-direction: column !important;
+            padding: 10px !important;
+            margin: 20px auto !important;
+        }
+        #cartItemsContainer {
+            width: 100% !important;
+            overflow-x: auto !important; /* Swipeable table */
+            -webkit-overflow-scrolling: touch;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .data-table {
+            min-width: 600px !important; /* Prevents text from crushing */
+        }
+        #cartSummary {
+            width: 100% !important;
+            margin-top: 20px !important;
+            box-sizing: border-box !important;
+        }
+        
+        /* 4. Fix Modals */
+        .product-modal-box {
+            width: 95% !important;
+            padding: 20px !important;
+            margin: 10px !important;
+            max-height: 90vh !important;
+            overflow-y: auto !important;
+        }
+    }
+
+    @media screen and (max-width: 480px) {
+        /* Very small phones get 1 column */
+        #medicineGrid {
+            grid-template-columns: 1fr !important;
+        }
+    }
 `;
 document.head.appendChild(globalStyles);
 
@@ -142,7 +221,7 @@ let globalMedicines = [];
 
 async function renderStore() { 
     const grid = document.getElementById('medicineGrid'); if(!grid) return;
-    grid.innerHTML = "<div style='text-align:center; width:100%; grid-column: 1 / -1; padding: 60px 0;'><i class='fas fa-spinner fa-spin' style='font-size: 3rem; color: #0f766e;'></i><p style='color:#64748b; font-size:1.2rem; margin-top:15px;'>Loading latest medicines from MongoDB...</p></div>";
+   grid.innerHTML = "<div style='text-align:center; width:100%; grid-column: 1 / -1; padding: 60px 0;'><i class='fas fa-spinner fa-spin' style='font-size: 3rem; color: #0f766e;'></i><p style='color:#64748b; font-size:1.2rem; margin-top:15px;'>Fetching medicines, please wait...</p></div>";
     try { globalMedicines = await DB.getMedicines(); if (!Array.isArray(globalMedicines)) globalMedicines = []; } catch(e) { globalMedicines = []; }
     if (globalMedicines.length === 0) { grid.innerHTML = `<div style="text-align:center; width:100%; grid-column: 1 / -1; padding: 40px; background: #fffbeb; border-radius: 10px; border: 2px solid #f59e0b; color: #92400e;"><i class="fas fa-box-open" style="font-size: 3rem; margin-bottom: 15px;"></i><h2>Database is Empty</h2><p>Please log in to the <a href="login.html" style="color: #0f766e; font-weight:bold;">Admin Dashboard</a> and click "Add New Medicine".</p></div>`; return; }
     filterMedicines();
@@ -183,12 +262,9 @@ function openProductModal(id) {
     let safePrice = parseFloat(product.price) || 0; 
     document.getElementById('modalName').innerText = product.name || 'Unknown Medicine'; 
     
-    // 🔴 THE FIX: Inline Rx Badge Injection
-    // Instead of relying on a floating box that gets hidden, we inject a beautiful, un-hideable badge right next to the category text!
     let rxBadgeHtml = product.isRx ? `<span style="background:#ef4444; color:white; padding:3px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold; margin-right:8px; display:inline-flex; align-items:center; gap:4px; box-shadow: 0 2px 5px rgba(239,68,68,0.3); vertical-align: text-bottom;"><i class="fas fa-file-medical"></i> Rx Required</span>` : '';
     document.getElementById('modalCategory').innerHTML = `${rxBadgeHtml} ${product.category || 'General'} ${product.manufacturer ? `<span style="color: #64748b;">| By ${product.manufacturer}</span>` : ''}`; 
     
-    // Hide the old broken badge if it exists in the HTML
     const oldBadge = document.getElementById('modalRxBadge'); 
     if(oldBadge) oldBadge.style.display = 'none';
 

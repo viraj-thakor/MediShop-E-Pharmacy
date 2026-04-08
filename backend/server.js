@@ -64,5 +64,9 @@ app.post('/api/data/:key', async (req, res) => {
 });
 
 // Start Server
-const PORT = 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+// Render provides process.env.PORT automatically in the cloud!
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+});
