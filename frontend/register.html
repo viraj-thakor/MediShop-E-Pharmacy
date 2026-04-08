@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - MediShop</title>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* =========================================
+           WIDER, COMPACT SPLIT-SCREEN AUTH STYLES
+           ========================================= */
+        body { 
+            margin: 0; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f1f5f9; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+        }
+
+        .auth-wrapper { 
+            background: white; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+            display: flex; 
+            width: 1000px; /* Made it wider */
+            max-width: 95%; 
+            overflow: hidden; 
+            margin: 20px auto;
+        }
+
+        /* Left Side: Dark Teal Branding */
+        .auth-left { 
+            background: #0f766e; 
+            color: white; 
+            padding: 40px; 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            text-align: center; 
+            position: relative; 
+        }
+        
+        .btn-back {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 6px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: 0.3s;
+        }
+        .btn-back:hover { background: rgba(255,255,255,0.3); }
+
+        .auth-icon { 
+            width: 80px; height: 80px; 
+            background: white;
+            color: #0f766e;
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 2.5rem; 
+            margin-bottom: 20px; 
+            margin-top: 30px;
+        }
+        
+        .auth-left h2 { font-size: 2.2rem; margin: 0 0 10px 0; font-weight: 900; letter-spacing: -0.5px;}
+        .auth-left p { font-size: 1.05rem; line-height: 1.5; color: rgba(255,255,255,0.9); margin: 0; }
+
+        /* Right Side: Registration Form */
+        .auth-right { 
+            padding: 35px 50px; 
+            flex: 1.3; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+        }
+        
+        .auth-right h2 { font-size: 1.8rem; color: #0f172a; margin: 0 0 5px 0; font-weight: 900;}
+        .auth-right > p { color: #64748b; margin-bottom: 20px; font-size: 0.95rem; }
+        
+        /* TIGHTER FORM GRID LAYOUT */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px 20px; 
+        }
+
+        .full-width { grid-column: 1 / -1; }
+
+        .form-group label { display: block; font-weight: 600; color: #475569; margin-bottom: 5px; font-size: 0.85rem; }
+        
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+        .input-wrapper i { position: absolute; left: 15px; color: #94a3b8; font-size: 0.95rem; }
+        .input-wrapper input { 
+            width: 100%; 
+            padding: 10px 15px 10px 40px; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 8px; 
+            font-size: 0.95rem; 
+            outline: none; 
+            transition: 0.3s; 
+            box-sizing: border-box; 
+            color: #0f172a;
+        }
+        .input-wrapper input:focus { border-color: #0f766e; box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1); }
+        .input-wrapper input::placeholder { color: #cbd5e1; }
+
+        .btn-auth { 
+            width: 100%; 
+            background: #0f766e; 
+            color: white; 
+            border: none; 
+            padding: 12px; 
+            border-radius: 8px; 
+            font-size: 1.05rem; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 8px; 
+            grid-column: 1 / -1;
+            margin-top: 5px;
+        }
+        .btn-auth:hover { background: #0d9488; }
+        
+        .auth-footer { text-align: center; margin-top: 15px; color: #64748b; font-size: 0.9rem; grid-column: 1 / -1;}
+        .auth-footer a { color: #0f766e; font-weight: 800; text-decoration: none; }
+        .auth-footer a:hover { text-decoration: underline; }
+
+        /* =========================================
+           COMPACT 2-COLUMN PASSWORD CHECKLIST 
+           ========================================= */
+        .password-criteria {
+            margin-top: 8px;
+            width: 100%;
+        }
+
+        .password-criteria ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Places rules side-by-side to save height! */
+            gap: 6px 15px;
+        }
+
+        .password-criteria li {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: #64748b; /* Gray until met */
+            transition: 0.2s;
+        }
+        
+        .password-criteria li i {
+            color: #cbd5e1; /* Blank circle color */
+            font-size: 0.65rem;
+            transition: 0.2s;
+        }
+
+        /* Success Green when rule is met */
+        .password-criteria li.met { color: #10b981; }
+        .password-criteria li.met i { color: #10b981; }
+
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+        .toast { background: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 10px; transform: translateX(120%); transition: 0.3s; display: flex; align-items: center; gap: 10px; border-left: 4px solid; font-weight: bold; }
+        .toast.show { transform: translateX(0); }
+        .toast.error { border-color: #ef4444; color: #ef4444; }
+
+        @media (max-width: 768px) {
+            .auth-wrapper { flex-direction: column; }
+            .auth-right { padding: 30px 20px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .password-criteria ul { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-wrapper">
+        <div class="auth-left">
+            <a href="index.html" class="btn-back"><i class="fas fa-arrow-left"></i> Back to Shop</a>
+            <div class="auth-icon"><i class="fas fa-user-md"></i></div>
+            <h2>Join MediShop Today</h2>
+            <p>Create an account to quickly checkout, track your prescriptions, and get access to exclusive health discounts.</p>
+        </div>
+
+        <div class="auth-right">
+           <h2 style="margin-top: 0; margin-bottom: 5px; font-size: 2.2rem; font-weight: 900; color: #0f172a;">Create Account</h2>
+            <p style="margin-top: 0; margin-bottom: 30px; color: #64748b; font-size: 1.05rem;">It only takes a minute to get started.</p>
+            
+            <form onsubmit="event.preventDefault(); registerUser();">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>Full Name</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-address-card"></i>
+                            <input type="text" id="regName" placeholder="e.g. John Doe" oninput="validateFullNameInput(this)" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Mobile Number</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-phone"></i>
+                            <input type="tel" id="regMobile" placeholder="10-digit number" pattern="[0-9]{10}" maxlength="10" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="regEmail" placeholder="name@email.com" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label>Username</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-user-plus"></i>
+                            <input type="text" id="regUser" placeholder="Choose a unique username" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label>Password</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="regPass" placeholder="Enter your password" required>
+                        </div>
+                        
+                        <div class="password-criteria" id="passCriteriaList">
+                            <ul>
+                                <li id="rule-length"><i class="far fa-circle"></i> At least 8 characters</li>
+                                <li id="rule-letter"><i class="far fa-circle"></i> One uppercase letter</li>
+                                <li id="rule-number"><i class="far fa-circle"></i> One number</li>
+                                <li id="rule-special"><i class="far fa-circle"></i> One special character (@, $, etc.)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-auth">Register Account <i class="fas fa-user-plus"></i></button>
+                    
+                    <div class="auth-footer">
+                        Already have an account? <a href="login.html">Login here</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <script src="script.js" defer></script>
+</body>
+</html>

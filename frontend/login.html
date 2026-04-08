@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - MediShop</title>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { 
+            margin: 0; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f1f5f9; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+        }
+
+        .auth-wrapper { 
+            background: white; 
+            border-radius: 20px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
+            display: flex; 
+            width: 900px; 
+            max-width: 95%; 
+            overflow: hidden; 
+            min-height: 550px; 
+        }
+
+        /* Left Side: Dark Teal Branding */
+        .auth-left { 
+            background: #0f766e; 
+            color: white; 
+            padding: 50px; 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            text-align: center; 
+            position: relative; 
+            overflow: hidden; 
+        }
+        
+        /* Decorative Background Circles */
+        .auth-left::before, .auth-left::after { 
+            content: ''; 
+            position: absolute; 
+            background: rgba(255,255,255,0.05); 
+            border-radius: 50%; 
+        }
+        .auth-left::before { width: 350px; height: 350px; top: -100px; left: -100px; }
+        .auth-left::after { width: 450px; height: 450px; bottom: -150px; right: -100px; }
+        
+        .auth-icon { 
+            background: rgba(255,255,255,0.2); 
+            width: 90px; 
+            height: 90px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 2.8rem; 
+            margin-bottom: 25px; 
+            z-index: 1; 
+            backdrop-filter: blur(5px);
+        }
+        
+        .auth-left h2 { font-size: 2.4rem; margin: 0 0 15px 0; z-index: 1; font-weight: 900; letter-spacing: -0.5px;}
+        .auth-left p { font-size: 1.1rem; line-height: 1.6; color: rgba(255,255,255,0.9); z-index: 1; }
+
+        /* Right Side: Login Form */
+        .auth-right { 
+            padding: 50px 60px; 
+            flex: 1.2; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+        }
+        
+        .auth-right h2 { font-size: 2.2rem; color: #0f172a; margin: 0 0 5px 0; font-weight: 900;}
+        .auth-right > p { color: #64748b; margin-bottom: 35px; font-size: 1.05rem; }
+        
+        .form-group { margin-bottom: 22px; }
+        .form-group label { display: block; font-weight: 700; color: #1e293b; margin-bottom: 8px; font-size: 0.95rem; }
+        
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+        .input-wrapper i { position: absolute; left: 18px; color: #94a3b8; font-size: 1.1rem; }
+        .input-wrapper input { 
+            width: 100%; 
+            padding: 15px 15px 15px 48px; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 10px; 
+            font-size: 1.05rem; 
+            outline: none; 
+            transition: 0.3s; 
+            box-sizing: border-box; 
+            color: #0f172a;
+        }
+        .input-wrapper input:focus { border-color: #0f766e; box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.1); }
+        .input-wrapper input::placeholder { color: #cbd5e1; }
+
+        .auth-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; font-size: 0.95rem; }
+        .auth-actions label { color: #64748b; display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600;}
+        
+        .forgot-link { color: #0f766e; text-decoration: none; font-weight: 700; transition: 0.3s; }
+        .forgot-link:hover { color: #0d9488; text-decoration: underline; }
+        
+        .btn-login { 
+            width: 100%; 
+            background: #0f766e; 
+            color: white; 
+            border: none; 
+            padding: 16px; 
+            border-radius: 10px; 
+            font-size: 1.15rem; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 10px; 
+        }
+        .btn-login:hover { background: #0d9488; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(15,118,110,0.2); }
+        
+        .auth-footer { text-align: center; margin-top: 30px; color: #64748b; font-size: 1rem; }
+        .auth-footer a { color: #0f766e; font-weight: 800; text-decoration: none; }
+        .auth-footer a:hover { text-decoration: underline; }
+
+        /* =========================================
+           FORGOT PASSWORD MODAL STYLES
+           ========================================= */
+        .modal-overlay { 
+            position: fixed; 
+            top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.6); 
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 2000; 
+            backdrop-filter: blur(4px);
+        }
+        .modal-box { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 15px; 
+            width: 90%; 
+            max-width: 450px; 
+            position: relative; 
+            text-align: center; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            animation: scaleUp 0.3s ease;
+        }
+        @keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.8rem; cursor: pointer; color: #94a3b8; transition: 0.2s;}
+        .close-modal:hover { color: #ef4444; }
+
+        /* Toast Styles */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+        .toast { background: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 10px; transform: translateX(120%); transition: 0.3s; display: flex; align-items: center; gap: 10px; border-left: 4px solid; font-weight: bold; }
+        .toast.show { transform: translateX(0); }
+        .toast.success { border-color: #10b981; color: #10b981; }
+        .toast.error { border-color: #ef4444; color: #ef4444; }
+        .toast.info { border-color: #3b82f6; color: #3b82f6; }
+
+        @media (max-width: 768px) {
+            .auth-wrapper { flex-direction: column; }
+            .auth-left { padding: 40px 20px; }
+            .auth-right { padding: 40px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-wrapper">
+        <div class="auth-left">
+            <div class="auth-icon"><i class="fas fa-heartbeat"></i></div>
+            <h2>Welcome Back</h2>
+            <p>Log in to securely manage your prescriptions, track your orders, and access personalized health recommendations.</p>
+        </div>
+
+        <div class="auth-right">
+           <h2 style="margin-top: 0; margin-bottom: 5px; font-size: 2.2rem; font-weight: 900; color: #0f172a;">Sign In</h2>
+            <p style="margin-top: 0; margin-bottom: 30px; color: #64748b; font-size: 1.05rem;">Enter your account details</p>
+            
+            <form onsubmit="event.preventDefault(); authLogin();">
+                <div class="form-group">
+                    <label>Username</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="username" placeholder="e.g. johndoe" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" placeholder="••••••••" required>
+                    </div>
+                </div>
+                
+                <div class="auth-actions">
+                    <label><input type="checkbox"> Remember me</label>
+                    <a href="#" onclick="openForgotPassModal()" class="forgot-link">Forgot Password?</a>
+                </div>
+                
+                <button type="submit" class="btn-login">Log In <i class="fas fa-arrow-right"></i></button>
+                
+                <div class="auth-footer">
+                    Don't have an account? <a href="register.html">Sign up now</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="forgotPassModal" class="modal-overlay">
+        <div class="modal-box">
+            <span class="close-modal" onclick="closeForgotPassModal()">&times;</span>
+            <i class="fas fa-unlock-alt" style="font-size: 3.5rem; color: #0f766e; margin-bottom: 15px;"></i>
+            <h2 style="margin: 0 0 10px 0; color: #0f172a; font-weight: 900;">Reset Password</h2>
+            <p style="color: #64748b; margin-bottom: 25px; line-height: 1.5;">Enter your registered username or email address. We will send a secure link to reset your password.</p>
+            
+            <div class="input-wrapper" style="margin-bottom: 20px;">
+                <i class="fas fa-envelope"></i>
+                <input type="text" id="resetInput" placeholder="Email or Username" required>
+            </div>
+            
+            <button onclick="processPasswordReset()" class="btn-login" style="border-radius: 10px;">Send Reset Link</button>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script src="script.js" defer></script>
+    
+    <script>
+        function openForgotPassModal() {
+            document.getElementById('forgotPassModal').style.display = 'flex';
+        }
+
+        function closeForgotPassModal() {
+            document.getElementById('forgotPassModal').style.display = 'none';
+            document.getElementById('resetInput').value = ''; // Clear input on close
+        }
+
+        // Logic to verify user in MongoDB and simulate sending email
+        async function processPasswordReset() {
+            const inputVal = document.getElementById('resetInput').value.trim();
+            
+            if (!inputVal) {
+                return showToast("Please enter your Username or Email.", "error");
+            }
+
+            showToast("Verifying user details...", "info");
+
+            // We use DB.getUsers() from your optimized script.js
+            const users = await DB.getUsers();
+            
+            // Check if input matches either a username OR an email
+            const validUser = users.find(u => u.user === inputVal || u.email === inputVal);
+
+            setTimeout(() => {
+                if (validUser) {
+                    const maskedEmail = validUser.email ? validUser.email.replace(/(.{2})(.*)(?=@)/, "$1***") : "your registered email";
+                    showToast(`Success! A reset link has been sent to ${maskedEmail}`, "success");
+                    closeForgotPassModal();
+                } else {
+                    showToast("User not found in the database. Please try again.", "error");
+                }
+            }, 1000); // Simulate brief network delay for realism
+        }
+    </script>
+</body>
+</html>

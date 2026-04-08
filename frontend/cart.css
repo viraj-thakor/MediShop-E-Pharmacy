@@ -1,0 +1,66 @@
+:root { --primary: #00897b; --primary-dark: #00695c; --bg-light: #f4f6f8; --white: #ffffff; --text: #333; --danger: #e53935; --success: #43a047; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+body { background: var(--bg-light); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+/* FIXED: Complete Navbar Styles */
+.navbar { background: var(--primary); padding: 0.8rem 2rem; display: flex !important; justify-content: space-between !important; align-items: center !important; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; white-space: nowrap; }
+.nav-brand { font-size: 1.5rem; font-weight: bold; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.nav-brand a { color: white; text-decoration: none; }
+.nav-right, #authContainer { display: flex !important; flex-direction: row !important; align-items: center !important; gap: 15px; flex-shrink: 0; }
+
+.nav-btn { display: inline-flex !important; align-items: center; justify-content: center; background-color: transparent !important; color: white !important; border: 2px solid white !important; padding: 6px 18px; border-radius: 5px; text-decoration: none; font-weight: 600; font-size: 0.9rem; white-space: nowrap; cursor: pointer; transition: all 0.2s ease; }
+.nav-btn:hover { background-color: white !important; color: var(--primary) !important; transform: translateY(-2px); }
+.nav-btn i { margin-right: 8px; }
+
+/* FIXED: Cart Badge Alignment */
+.cart-wrapper { position: relative; display: inline-flex; align-items: center; }
+.badge { background: #e53935; color: white; font-size: 0.75rem; height: 22px; min-width: 22px; display: flex; align-items: center; justify-content: center; border-radius: 11px; position: absolute; top: -8px; right: -10px; border: 2px solid var(--primary); font-weight: bold; z-index: 2; padding: 0 4px;}
+
+.cart-animate { animation: shake 0.5s; }
+@keyframes shake { 0% { transform: rotate(0deg); } 25% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } 75% { transform: rotate(-5deg); } 100% { transform: rotate(0deg); } }
+.btn-logout { border-color: #dc3545 !important; background-color: #dc3545 !important; }
+.btn-logout:hover { background-color: #c82333 !important; border-color: #c82333 !important; color: white !important;}
+
+/* Cart Page Styles */
+.container { max-width: 1000px; margin: 0 auto; padding: 0 1rem; flex: 1; width: 100%; }
+.cart-page { background: white; border-radius: 12px; padding: 2.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+
+.cart-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; }
+.cart-header-flex h2 { font-size: 1.8rem; color: #1e293b; }
+.btn-outline { border: 1px solid var(--primary); color: var(--primary); padding: 8px 18px; border-radius: 6px; text-decoration: none; font-weight: 600; transition: 0.3s; }
+.btn-outline:hover { background: var(--primary); color: white; }
+
+.cart-summary-box { background: #f8fafc; padding: 30px; border-radius: 10px; margin-top: 30px; text-align: right; border: 1px solid #e2e8f0; }
+.btn-checkout { background: var(--primary); color: white; border: none; padding: 14px 35px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.btn-checkout:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0, 137, 123, 0.2); }
+
+.data-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+.data-table th { text-align: left; padding: 15px 10px; border-bottom: 2px solid #e2e8f0; color: #475569; font-weight: 600; text-transform: uppercase; font-size: 0.85rem;}
+.data-table td { padding: 15px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #333;}
+
+/* Modals */
+.modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(2px); }
+.modal-content { background: white; margin: 8% auto; padding: 2.5rem; border-radius: 12px; width: 450px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2);}
+.close { position: absolute; right: 20px; top: 15px; font-size: 1.8rem; cursor: pointer; color: #94a3b8; transition: color 0.2s;}
+.close:hover { color: #0f172a; }
+
+.file-upload-box { border: 2px dashed #cbd5e1; padding: 25px; text-align: center; margin-bottom: 20px; border-radius: 8px; background: #f8fafc; }
+.input-std { width: 100%; padding: 12px 15px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; background: #f8fafc; transition: 0.3s; box-sizing: border-box; }
+.input-std:focus { outline: none; border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(0, 137, 123, 0.15); }
+
+/* Secure Payment Modal Tabs */
+.payment-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+.pay-tab { flex: 1; padding: 10px; text-align: center; background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 600; color: #64748b; transition: all 0.2s ease; }
+.pay-tab:hover { background: #f1f5f9; }
+.pay-tab.active { border-color: var(--primary); color: var(--primary); background: #f0fdfa; box-shadow: 0 2px 4px rgba(0, 137, 123, 0.1); }
+.pay-tab-content { display: none; animation: fadeIn 0.3s ease; }
+.pay-tab-content.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Toast */
+#toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+.toast { background-color: #1e293b; color: #fff; padding: 14px 24px; margin-top: 10px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; opacity: 0; transform: translateY(20px); transition: 0.3s; font-weight: 500;}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { border-left: 6px solid var(--success); }
+.toast.info { border-left: 6px solid #3b82f6; }
+.toast.error { border-left: 6px solid var(--danger); }

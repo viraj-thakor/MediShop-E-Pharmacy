@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart - MediShop</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Cart Page Specific Styles */
+        .cart-container {
+            max-width: 1300px;
+            margin: 40px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            flex: 1;
+            width: 100%;
+        }
+        
+        .cart-box {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-light);
+        }
+
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { text-align: left; padding: 15px; color: #64748b; font-size: 0.9rem; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; }
+        .data-table td { padding: 20px 15px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; font-size: 1.05rem; }
+        
+        .cart-summary {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-light);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        /* Payment Modal Specifics */
+        .pay-tab {
+            flex: 1; padding: 12px; border-radius: 8px; border: 2px solid #e2e8f0; 
+            background: white; color: #64748b; font-weight: 700; cursor: pointer;
+            transition: all 0.3s ease; font-size: 1rem;
+        }
+        .pay-tab.active {
+            background: #e0f2f1; color: var(--primary-dark); border-color: var(--primary);
+        }
+        .pay-tab-content { display: none; padding: 20px 0 10px 0; }
+        .pay-tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+        @media (max-width: 900px) {
+            .cart-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-brand"><a href="index.html"><i class="fas fa-heartbeat"></i> MediShop</a></div>
+        <div class="search-wrapper">
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search for medicines..." onkeyup="if(window.location.pathname.includes('index.html')) filterMedicines()">
+                <button onclick="if(window.location.pathname.includes('index.html')) filterMedicines(); else window.location.href='index.html';"><i class="fas fa-search"></i></button>
+            </div>
+        </div>
+        <div class="nav-right">
+            <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> Home</a>
+            <a href="cart.html" class="nav-btn cart-wrapper" style="background: white !important; color: var(--primary) !important;">
+                <i class="fas fa-shopping-cart"></i> Cart
+                <span id="cartCount" class="badge">0</span>
+            </a>
+            <div id="authContainer"></div>
+        </div>
+    </nav>
+
+    <div class="cart-container" style="margin: 0 auto; max-width: 1300px; padding: 20px;">
+        
+        <div class="cart-box">
+            <h2 style="font-size: 1.8rem; color: var(--text-main); margin-bottom: 25px; font-weight: 800;"><i class="fas fa-shopping-bag" style="color: var(--primary);"></i> Shopping Cart</h2>
+            <div id="cartItemsContainer" style="overflow-x: auto;">
+                </div>
+        </div>
+
+        <div class="cart-summary" id="cartSummary" style="display: none;">
+            <h3 style="font-size: 1.4rem; color: var(--text-main); margin-bottom: 25px; font-weight: 800;">Order Summary</h3>
+            
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span>Calculated Below</span>
+            </div>
+            <div class="summary-row">
+                <span>Shipping</span>
+                <span style="color: var(--success); font-weight: bold;">FREE</span>
+            </div>
+            <div class="summary-row">
+                <span>Taxes & Fees</span>
+                <span>Included</span>
+            </div>
+
+            <div class="summary-total">
+                <span>Total</span>
+                <span id="cartTotal" style="color: var(--primary);">₹0.00</span>
+            </div>
+
+            <button class="btn-primary" onclick="processOrder()" style="width: 100%; padding: 16px; font-size: 1.15rem; margin-top: 25px; border-radius: 12px;"><i class="fas fa-lock"></i> Proceed to Checkout</button>
+            
+            <div style="text-align: center; margin-top: 15px; color: #94a3b8; font-size: 0.85rem;">
+                <i class="fas fa-shield-alt"></i> 100% Secure Encrypted Payment
+            </div>
+        </div>
+    </div>
+
+    <div id="rxModal" class="product-modal-overlay">
+        <div class="product-modal-box" style="max-width: 500px; padding: 35px; text-align: center; animation: scaleUp 0.3s ease;">
+            <span class="close-product" onclick="document.getElementById('rxModal').style.display='none'">&times;</span>
+            <i class="fas fa-file-prescription" style="font-size: 4.5rem; color: var(--danger); margin-bottom: 20px;"></i>
+            <h2 style="margin-bottom: 15px; color: var(--text-main); font-weight: 800;">Prescription Required</h2>
+            <p style="color: var(--text-muted); margin-bottom: 25px; line-height: 1.6;">One or more items in your cart require a valid medical prescription. Please upload a clear photo or PDF to proceed.</p>
+            
+            <input type="file" id="rxFile" accept="image/*,.pdf" style="margin-bottom: 25px; width: 100%; padding: 12px; border: 2px dashed #cbd5e1; border-radius: 10px; background: #f8fafc; cursor: pointer;">
+            
+            <button class="btn-primary" onclick="proceedFromRx()" style="width: 100%; padding: 15px; font-size: 1.1rem; border-radius: 10px;"><i class="fas fa-upload"></i> Upload & Continue to Payment</button>
+        </div>
+    </div>
+
+    <div id="paymentModal" class="product-modal-overlay">
+        <div class="product-modal-box" style="max-width: 500px; padding: 35px; animation: scaleUp 0.3s ease;">
+            <span class="close-product" onclick="document.getElementById('paymentModal').style.display='none'">&times;</span>
+            <h2 style="margin-bottom: 20px; color: var(--text-main); font-weight: 800;"><i class="fas fa-lock" style="color: var(--primary);"></i> Secure Payment</h2>
+            
+            <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 25px; color: var(--text-main); padding-bottom: 15px; border-bottom: 2px solid #e2e8f0;">
+                Total to Pay: <span id="payModalTotal" style="color: var(--primary); font-size: 1.5rem; float: right;">₹0.00</span>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <button class="pay-tab active" onclick="switchPayTab('cc')">Credit Card</button>
+                <button class="pay-tab" onclick="switchPayTab('upi')">UPI / QR</button>
+                <button class="pay-tab" onclick="switchPayTab('cod')">COD</button>
+            </div>
+
+            <div id="tab-cc" class="pay-tab-content active">
+                <label style="font-weight: 700; font-size: 0.9rem; color: #64748b; margin-bottom: 5px; display: block;">Card Number</label>
+                <input type="text" id="ccNumber" placeholder="e.g. 4242 4242 4242 4242" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/(.{4})/g, '$1 ').trim();" maxlength="19" style="width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 10px; margin-bottom: 20px; outline: none; transition: 0.3s; font-size: 1.05rem;" onfocus="this.style.borderColor='#0f766e'" onblur="this.style.borderColor='#e2e8f0'">
+                
+                <div style="display: flex; gap: 20px; margin-bottom: 10px;">
+                    <div style="flex: 1;">
+                        <label style="font-weight: 700; font-size: 0.9rem; color: #64748b; margin-bottom: 5px; display: block;">Expiry Date</label>
+                        <input type="text" id="ccExpiry" placeholder="MM/YY" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/^([2-9])$/g, '0$1').replace(/^(1[3-9])$/g, '01').replace(/^([0-1][0-9])([0-9]{1,2})$/g, '$1/$2');" maxlength="5" style="width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 10px; outline: none; transition: 0.3s; font-size: 1.05rem;" onfocus="this.style.borderColor='#0f766e'" onblur="this.style.borderColor='#e2e8f0'">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-weight: 700; font-size: 0.9rem; color: #64748b; margin-bottom: 5px; display: block;">CVV</label>
+                        <input type="password" id="ccCvv" placeholder="3 digits" oninput="this.value = this.value.replace(/[^0-9]/g, '');" maxlength="4" style="width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 10px; outline: none; transition: 0.3s; font-size: 1.05rem;" onfocus="this.style.borderColor='#0f766e'" onblur="this.style.borderColor='#e2e8f0'">
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-upi" class="pay-tab-content" style="text-align: center; padding: 30px 20px;">
+                <i class="fas fa-qrcode" style="font-size: 5rem; color: var(--primary); margin-bottom: 20px;"></i>
+                <p style="color: var(--text-muted); font-size: 1.05rem; font-weight: 600;">Scan QR code with any UPI app to pay.</p>
+            </div>
+
+            <div id="tab-cod" class="pay-tab-content" style="text-align: center; padding: 30px 20px;">
+                <i class="fas fa-hand-holding-usd" style="font-size: 5rem; color: #d97706; margin-bottom: 20px;"></i>
+                <p style="color: var(--text-muted); font-size: 1.05rem; font-weight: 600;">Pay with cash upon delivery at your doorstep.</p>
+            </div>
+
+            <button class="btn-primary" onclick="confirmPayment()" style="width: 100%; padding: 16px; font-size: 1.15rem; border-radius: 10px; margin-top: 15px;"><i class="fas fa-check-circle"></i> Confirm Order</button>
+        </div>
+    </div>
+<footer class="fat-footer" style="background: #0f172a; padding: 60px 0 20px 0; color: #94a3b8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin-top: 60px;">
+        <div class="footer-cols" style="display: flex; justify-content: space-between; flex-wrap: wrap; max-width: 1250px; margin: 0 auto; padding: 0 20px; gap: 30px;">
+            
+            <div style="flex: 1; min-width: 250px;">
+                <h3 style="color: white; font-size: 1.3rem; margin-top: 0; margin-bottom: 20px;"><i class="fas fa-heartbeat" style="color: #14b8a6;"></i> MediShop</h3>
+                <p style="line-height: 1.6; margin: 0; font-size: 0.95rem;">Your trusted online pharmacy. Quality healthcare delivered securely directly to your doorstep.</p>
+            </div>
+            
+            <div style="flex: 1; min-width: 150px;">
+                <h3 style="color: white; font-size: 1.2rem; margin-top: 0; margin-bottom: 20px;">Quick Links</h3>
+                <p style="margin-bottom: 10px;"><a href="#" onclick="showInfoModal('about')" style="color: #94a3b8; text-decoration: none; transition: 0.3s; font-size: 0.95rem;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'"><i class="fas fa-angle-right" style="color: #14b8a6; margin-right: 5px;"></i> About Us</a></p>
+                <p style="margin-bottom: 10px;"><a href="#" onclick="showInfoModal('support')" style="color: #94a3b8; text-decoration: none; transition: 0.3s; font-size: 0.95rem;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'"><i class="fas fa-angle-right" style="color: #14b8a6; margin-right: 5px;"></i> Contact Support</a></p>
+                <p style="margin: 0;"><a href="#" onclick="showInfoModal('policy')" style="color: #94a3b8; text-decoration: none; transition: 0.3s; font-size: 0.95rem;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'"><i class="fas fa-angle-right" style="color: #14b8a6; margin-right: 5px;"></i> Return Policy</a></p>
+            </div>
+            
+            <div style="flex: 1; min-width: 220px;">
+                <h3 style="color: white; font-size: 1.2rem; margin-top: 0; margin-bottom: 20px;">Contact Us</h3>
+                <p style="margin-bottom: 10px; font-size: 0.95rem;"><i class="fas fa-envelope" style="color: #14b8a6; margin-right: 8px;"></i> support@medishop.com</p>
+                <p style="margin: 0; font-size: 0.95rem;"><i class="fas fa-phone" style="color: #14b8a6; margin-right: 8px;"></i> +91 1800-123-4567</p>
+            </div>
+            
+            <div style="flex: 1; min-width: 200px;">
+                <h3 style="color: white; font-size: 1.2rem; margin-top: 0; margin-bottom: 20px;"><i class="fas fa-map-marker-alt" style="color: #14b8a6;"></i> Location</h3>
+                <p style="line-height: 1.6; margin: 0; font-size: 0.95rem;">123 Health Avenue<br>Medical District<br>Ahmedabad, Gujarat<br>India - 380001</p>
+            </div>
+            
+        </div>
+        
+        <div class="footer-bottom" style="text-align: center; border-top: 1px solid #1e293b; margin-top: 50px; padding-top: 20px; font-size: 0.9rem;">
+            &copy; 2026 MediShop Premium System. Developed by <strong>Thakor Viraj Ganpatsinh</strong>.
+        </div>
+    </footer>
+
+    <div id="toast-container"></div>
+
+    <script src="script.js"></script>
+    <script>
+        checkUserLoginState();
+        renderCart();
+        updateCartCount();
+
+        // Custom styling behavior for the payment tabs to work visually
+        function switchPayTab(tabId) {
+            document.querySelectorAll('.pay-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.pay-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            if(tabId === 'cc') {
+                document.querySelector('.pay-tab:nth-child(1)').classList.add('active');
+                document.getElementById('tab-cc').classList.add('active');
+                pendingOrderData.paymentMethod = 'Credit Card';
+            } else if (tabId === 'upi') {
+                document.querySelector('.pay-tab:nth-child(2)').classList.add('active');
+                document.getElementById('tab-upi').classList.add('active');
+                pendingOrderData.paymentMethod = 'UPI / QR';
+            } else if (tabId === 'cod') {
+                document.querySelector('.pay-tab:nth-child(3)').classList.add('active');
+                document.getElementById('tab-cod').classList.add('active');
+                pendingOrderData.paymentMethod = 'Cash on Delivery';
+            }
+        }
+    </script>
+</body>
+</html>

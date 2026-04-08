@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Profile - MediShop</title>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Standard Header Styles */
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f8fafc; }
+        .premium-navbar { background: #0f766e !important; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: none; }
+        .nav-brand a { color: #ffffff; font-size: 1.8rem; font-weight: 800; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .nav-brand i { color: #ffffff; }
+        .nav-right-cluster { display: flex; gap: 12px; }
+        .nav-btn-styled, #authContainer .nav-btn { border: 1px solid rgba(255,255,255,0.4) !important; background: transparent !important; color: white !important; padding: 8px 20px !important; border-radius: 6px !important; font-weight: 600 !important; display: inline-flex !important; align-items: center !important; gap: 8px !important; text-decoration: none !important; cursor: pointer !important; }
+        .nav-btn-styled:hover, #authContainer .nav-btn:hover { background: rgba(255,255,255,0.15) !important; border-color: white !important; }
+        .cart-badge { position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; border: 2px solid #0f766e !important;}
+        #authContainer { display: flex; gap: 12px; align-items: center; margin: 0; padding: 0;}
+        #authContainer .btn-logout { background: #ef4444 !important; border-color: #ef4444 !important; }
+
+        /* 🔴 FIXED Profile Layout */
+        .profile-container { 
+            max-width: 1200px; 
+            margin: 40px auto; 
+            padding: 0 20px; 
+            display: grid; 
+            grid-template-columns: 280px 1fr; 
+            gap: 30px; 
+            align-items: stretch; /* Forces both columns to be equal height */
+        }
+        
+        .profile-sidebar { 
+            background: white; 
+            border-radius: 20px; 
+            padding: 35px 20px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            border: 1px solid #e2e8f0; 
+            text-align:center;
+            height: 100%; 
+            box-sizing: border-box;
+        }
+        
+        .profile-avatar { width: 100px; height: 100px; background: #e0f2f1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: #0f766e; margin: 0 auto 15px auto; }
+        
+        .profile-menu { margin-top: 30px; display: flex; flex-direction: column; gap: 8px; }
+        .profile-menu-item { padding: 12px 20px; border-radius: 10px; color: #64748b; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.3s; background: transparent; border: none; font-size: 1rem; width: 100%; text-align: left; }
+        .profile-menu-item:hover { background: #f8fafc; color: #0f172a; }
+        .active-tab { background: #e0f2f1 !important; color: #0f766e !important; }
+        
+        /* 🔴 STRETCHED RIGHT SIDE */
+        .profile-main { height: 100%; }
+        #view-dashboard, #view-orders { height: 100%; }
+        
+        .profile-card { 
+            background: white; 
+            border-radius: 20px; 
+            padding: 40px; /* Increased padding */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            border: 1px solid #e2e8f0; 
+            height: 100%; /* Forces the box to match sidebar height */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 10px; } /* Increased gap */
+        .info-box { background: #f8fafc; padding: 20px 25px; border-radius: 12px; border: 1px solid #e2e8f0; } /* Bigger boxes */
+        
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .data-table th { text-align: left; padding: 15px; color: #64748b; border-bottom: 2px solid #e2e8f0; font-size: 0.9rem; text-transform: uppercase;}
+        .data-table td { padding: 15px; border-bottom: 1px solid #e2e8f0; font-size: 1.05rem;}
+        
+        /* Modals */
+        .product-modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; align-items:center; justify-content:center; backdrop-filter: blur(4px); }
+        .product-modal-box { background:white; padding:35px; border-radius:15px; position:relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2); animation: scaleUp 0.3s ease; }
+        @keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        /* Toasts */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+        .toast { background: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 10px; transform: translateX(120%); transition: 0.3s; display: flex; align-items: center; gap: 10px; border-left: 4px solid; font-weight: bold; }
+        .toast.show { transform: translateX(0); }
+        .toast.success { border-color: #10b981; color: #10b981; }
+        .toast.error { border-color: #ef4444; color: #ef4444; }
+    </style>
+</head>
+<body>
+
+    <nav class="premium-navbar">
+        <div class="nav-brand"><a href="index.html"><i class="fas fa-heartbeat"></i> MediShop</a></div>
+        <div class="nav-right-cluster">
+            <a href="index.html" class="nav-btn-styled"><i class="fas fa-home"></i> Home</a>
+            <a href="cart.html" class="nav-btn-styled" style="position:relative;"><i class="fas fa-shopping-cart"></i> Cart<span id="cartCount" class="cart-badge">0</span></a>
+            <div id="authContainer"></div>
+        </div>
+    </nav>
+
+    <div class="profile-container">
+        <div class="profile-sidebar">
+            <div class="profile-avatar"><i class="fas fa-user"></i></div>
+            <h3 id="sidebarName" style="font-size: 1.5rem; margin-bottom: 5px;">Loading...</h3>
+            <p style="background: #f1f5f9; padding: 5px 15px; border-radius: 20px; font-size:0.9rem; display:inline-block; margin-top: 0; color: #475569;">Customer Account</p>
+            
+            <div class="profile-menu">
+                <button onclick="switchTab('dashboard')" id="tab-dashboard" class="profile-menu-item active-tab"><i class="fas fa-address-card"></i> My Dashboard</button>
+                <button onclick="switchTab('orders')" id="tab-orders" class="profile-menu-item"><i class="fas fa-clipboard-list"></i> My Orders</button>
+                <button onclick="window.location.href='index.html'" class="profile-menu-item"><i class="fas fa-shopping-bag"></i> Continue Shopping</button>
+                <button onclick="logout()" class="profile-menu-item" style="color:#ef4444; margin-top: 10px;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </div>
+
+        <div class="profile-main">
+            <div id="view-dashboard">
+                <div class="profile-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <i class="fas fa-address-card" style="color: #0f766e; font-size: 1.8rem;"></i>
+                            <h3 style="color: #0f172a; font-size: 1.6rem; margin: 0;">Personal Information</h3>
+                        </div>
+                        <button onclick="openEditProfileModal()" class="btn-primary" style="background: #0f766e; color: white; border: none; padding: 10px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s;"><i class="fas fa-edit"></i> Edit Profile</button>
+                    </div>
+                    
+                    <div class="info-grid">
+                        <div class="info-box"><span style="font-size: 0.85rem; color: #64748b; font-weight: bold; text-transform: uppercase;">Full Name</span><div id="profileName" style="font-size: 1.25rem; font-weight: bold; color: #0f172a; margin-top: 8px;"></div></div>
+                        <div class="info-box"><span style="font-size: 0.85rem; color: #64748b; font-weight: bold; text-transform: uppercase;">Username</span><div id="profileUser" style="font-size: 1.25rem; font-weight: bold; color: #0f172a; margin-top: 8px;"></div></div>
+                        <div class="info-box"><span style="font-size: 0.85rem; color: #64748b; font-weight: bold; text-transform: uppercase;">Email Address</span><div id="profileEmail" style="font-size: 1.25rem; font-weight: bold; color: #0f172a; margin-top: 8px;"></div></div>
+                        <div class="info-box"><span style="font-size: 0.85rem; color: #64748b; font-weight: bold; text-transform: uppercase;">Mobile Number</span><div id="profileMobile" style="font-size: 1.25rem; font-weight: bold; color: #0f172a; margin-top: 8px;"></div></div>
+                        <div class="info-box" style="grid-column: 1 / -1;"><span style="font-size: 0.85rem; color: #64748b; font-weight: bold; text-transform: uppercase;">Delivery Address</span><div id="profileAddress" style="font-size: 1.25rem; font-weight: bold; color: #0f172a; margin-top: 8px; line-height: 1.5;"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-orders" style="display: none;">
+                <div class="profile-card">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                        <i class="fas fa-history" style="color: #0f766e; font-size: 1.8rem;"></i>
+                        <h3 style="color: #0f172a; font-size: 1.6rem; margin: 0;">Recent Orders</h3>
+                    </div>
+                    
+                    <div style="overflow-x: auto; width: 100%;">
+                        <table class="data-table">
+                            <thead><tr><th>Order ID & Date</th><th>Items Ordered</th><th>Total Amount</th><th>Status</th></tr></thead>
+                            <tbody id="userOrdersBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editProfileModal" class="product-modal-overlay" style="display:none;">
+        <div class="product-modal-box" style="max-width:500px; width:90%;">
+            <span onclick="closeEditProfileModal()" style="position:absolute; top:15px; right:20px; font-size:1.5rem; cursor:pointer; color: #94a3b8;">&times;</span>
+            <h2 style="margin-top: 0; margin-bottom: 25px; color: #0f172a;">Edit Profile</h2>
+            <form onsubmit="saveProfileDetails(event)">
+                <label style="display: block; font-weight: bold; color: #475569; margin-bottom: 5px; font-size: 0.9rem;">Email Address</label>
+                <input type="email" id="editEmail" placeholder="Email" required style="width: 100%; padding: 12px; margin-bottom:15px; border: 2px solid #e2e8f0; border-radius: 10px; box-sizing:border-box; outline: none;">
+                
+                <label style="display: block; font-weight: bold; color: #475569; margin-bottom: 5px; font-size: 0.9rem;">Mobile Number</label>
+                <input type="text" id="editMobile" placeholder="Mobile Number" required style="width: 100%; padding: 12px; margin-bottom:15px; border: 2px solid #e2e8f0; border-radius: 10px; box-sizing:border-box; outline: none;">
+                
+                <label style="display: block; font-weight: bold; color: #475569; margin-bottom: 5px; font-size: 0.9rem;">Complete Delivery Address</label>
+                <textarea id="editAddress" required placeholder="Enter your full address" rows="4" style="width: 100%; padding: 12px; margin-bottom:20px; border: 2px solid #e2e8f0; border-radius: 10px; box-sizing:border-box; outline: none; font-family: inherit;"></textarea>
+                
+                <button type="submit" class="btn-primary" style="width:100%; padding: 15px; border-radius:10px; background: #0f766e; color: white; border: none; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s;">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="fat-footer" style="background: #0f172a; padding: 60px 0 20px 0; color: #94a3b8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin-top: 60px; width: 100%; overflow: hidden;">
+        <div class="footer-cols" style="display: flex; justify-content: center; flex-wrap: wrap; max-width: 1100px; margin: 0 auto !important; padding: 0 20px; gap: 40px; width: 100%; box-sizing: border-box;">
+            <div style="flex: 1 1 220px; max-width: 300px;">
+                <h3 style="color: white; font-size: 1.3rem; margin-top: 0; margin-bottom: 20px;"><i class="fas fa-heartbeat" style="color: #14b8a6;"></i> MediShop</h3>
+                <p style="line-height: 1.6; margin: 0; font-size: 0.95rem;">Your trusted online pharmacy. Quality healthcare delivered securely directly to your doorstep.</p>
+            </div>
+            <div style="flex: 1 1 150px; max-width: 200px;">
+                <h3 style="color: white; font-size: 1.2rem; margin-top: 0; margin-bottom: 20px;">Quick Links</h3>
+                <p style="margin-bottom: 10px;"><a href="#" onclick="showInfoModal('about')" style="color: #94a3b8; text-decoration: none; transition: 0.3s; font-size: 0.95rem;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'"><i class="fas fa-angle-right" style="color: #14b8a6; margin-right: 5px;"></i> About Us</a></p>
+                <p style="margin-bottom: 10px;"><a href="#" onclick="showInfoModal('support')" style="color: #94a3b8; text-decoration: none; transition: 0.3s; font-size: 0.95rem;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'"><i class="fas fa-angle-right" style="color: #14b8a6; margin-right: 5px;"></i> Contact Support</a></p>
+                <p style="margin: 0;"><a href="#" onclick="showInfoModal('policy')" style="color: #94a3b8; text-decoration: none; transition: 0.3s; font-size: 0.95rem;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94a3b8'"><i class="fas fa-angle-right" style="color: #14b8a6; margin-right: 5px;"></i> Return Policy</a></p>
+            </div>
+            <div style="flex: 1 1 200px; max-width: 250px;">
+                <h3 style="color: white; font-size: 1.2rem; margin-top: 0; margin-bottom: 20px;">Contact Us</h3>
+                <p style="margin-bottom: 10px; font-size: 0.95rem;"><i class="fas fa-envelope" style="color: #14b8a6; margin-right: 8px;"></i> support@medishop.com</p>
+                <p style="margin: 0; font-size: 0.95rem;"><i class="fas fa-phone" style="color: #14b8a6; margin-right: 8px;"></i> +91 1800-123-4567</p>
+            </div>
+            <div style="flex: 1 1 200px; max-width: 250px;">
+                <h3 style="color: white; font-size: 1.2rem; margin-top: 0; margin-bottom: 20px;"><i class="fas fa-map-marker-alt" style="color: #14b8a6;"></i> Location</h3>
+                <p style="line-height: 1.6; margin: 0; font-size: 0.95rem;">123 Health Avenue<br>Medical District<br>Ahmedabad, Gujarat<br>India - 380001</p>
+            </div>
+        </div>
+        <div class="footer-bottom" style="text-align: center; border-top: 1px solid #1e293b; margin-top: 50px; padding-top: 20px; font-size: 0.9rem;">
+            &copy; 2026 MediShop Premium System. Developed by <strong>Thakor Viraj Ganpatsinh</strong>.
+        </div>
+    </footer>
+
+    <div id="toast-container"></div>
+    <script src="script.js"></script>
+    
+    <script> 
+        checkUserLoginState(); 
+        updateCartCount(); 
+        renderUserProfile(); 
+
+        function switchTab(tabName) {
+            document.getElementById('view-dashboard').style.display = 'none';
+            document.getElementById('view-orders').style.display = 'none';
+            document.getElementById('tab-dashboard').classList.remove('active-tab');
+            document.getElementById('tab-orders').classList.remove('active-tab');
+
+            document.getElementById('view-' + tabName).style.display = 'block';
+            document.getElementById('tab-' + tabName).classList.add('active-tab');
+        }
+    </script>
+</body>
+</html>
