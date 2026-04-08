@@ -22,7 +22,7 @@ document.head.appendChild(globalStyles);
 /* =========================================
    1. ⚡ ULTRA-OPTIMIZED CACHE DATABASE LAYER 
    ========================================= */
-const API_URL = 'http://localhost:5000/api/data';
+const API_URL = 'https://medishop-backend-xyz.onrender.com/api/data';
 
 function parseMongooseData(raw) {
     if (!raw) return []; if (Array.isArray(raw)) return raw;
