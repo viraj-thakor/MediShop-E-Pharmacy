@@ -1,25 +1,48 @@
 /* =========================================
-   0. 🔴 UI HOTFIX INJECTIONS & SLEEK MOBILE ENGINE (v4)
+   0. 🔴 UI HOTFIX INJECTIONS (v5 - Sidebar & Toast Fix)
    ========================================= */
 const globalStyles = document.createElement('style');
 globalStyles.innerHTML = `
-    /* 🛑 NUCLEAR FIX FOR HORIZONTAL SCROLLING */
-    html, body { overflow-x: hidden !important; width: 100% !important; max-width: 100vw !important; margin: 0; padding: 0; box-sizing: border-box; }
+    /* 1. 🛑 REMOVED GLOBAL OVERFLOW TO RESTORE STICKY SIDEBAR */
+    html, body {
+        width: 100% !important;
+        max-width: 100vw !important;
+        margin: 0; padding: 0;
+        box-sizing: border-box;
+    }
     *, *::before, *::after { box-sizing: inherit; }
 
-    /* 🛠️ NEW: ADMIN SIDEBAR FULL-HEIGHT FIX */
+    /* 2. 🛠️ ADMIN SIDEBAR FULL-HEIGHT FIX */
     .sidebar {
         height: 100vh !important;
+        position: -webkit-sticky !important;
         position: sticky !important;
         top: 0 !important;
         display: flex !important;
         flex-direction: column !important;
         overflow-y: auto !important;
     }
-    /* Push the logout button to the absolute bottom of the screen */
+    /* Push logout button to the absolute bottom */
     .sidebar [onclick*="logout"], .sidebar .logout-btn {
         margin-top: auto !important;
         margin-bottom: 20px !important;
+    }
+
+    /* 3. 🔔 TOAST/POPUP REPOSITIONING (BOTTOM RIGHT) */
+    #toast-container {
+        position: fixed !important;
+        top: auto !important; /* Removes default top position */
+        bottom: 30px !important; /* Moves to bottom */
+        right: 30px !important;
+        display: flex !important;
+        flex-direction: column-reverse !important; /* Stacks new messages nicely */
+        z-index: 9999 !important;
+        align-items: flex-end !important;
+    }
+    .toast {
+        margin-top: 10px !important;
+        margin-bottom: 0 !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
     }
 
     #modalImg { width: 100% !important; height: 100% !important; min-height: 300px; object-fit: cover !important; border-radius: 12px; background: #f1f5f9 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="50%" x="50%" dominant-baseline="middle" text-anchor="middle" font-size="6" fill="%2394a3b8">Fetching...</text></svg>') center center no-repeat; transition: opacity 0.3s ease-in-out; }
@@ -34,7 +57,20 @@ globalStyles.innerHTML = `
        📱 MOBILE RESPONSIVE ENGINE
        ========================================= */
     @media screen and (max-width: 850px) {
-        /* Fix Admin Sidebar for Mobile (Turns it into a top-menu) */
+        /* Apply overflow hidden ONLY on mobile to prevent horizontal scroll without breaking desktop sticky */
+        html, body { overflow-x: hidden !important; }
+
+        /* Toast on mobile: Bottom Center for better thumb reach */
+        #toast-container {
+            bottom: 20px !important;
+            right: 50% !important;
+            transform: translateX(50%) !important;
+            align-items: center !important;
+            width: 90% !important;
+        }
+        .toast { width: 100% !important; text-align: center !important; justify-content: center !important; }
+
+        /* Mobile Sidebar */
         .sidebar {
             height: auto !important;
             min-height: auto !important;
@@ -46,20 +82,14 @@ globalStyles.innerHTML = `
             padding: 10px !important;
             z-index: 100 !important;
         }
-        .sidebar [onclick*="logout"], .sidebar .logout-btn {
-            margin-top: 10px !important;
-            margin-bottom: 10px !important;
-            width: 100% !important;
-        }
+        .sidebar [onclick*="logout"], .sidebar .logout-btn { margin-top: 10px !important; margin-bottom: 10px !important; width: 100% !important; }
 
-        /* Sleek, Compact Header */
         header { padding: 10px 5px !important; height: auto !important; }
         .navbar, .nav-container { display: flex !important; flex-direction: column !important; align-items: center !important; width: 100% !important; gap: 10px !important; padding: 0 !important; box-sizing: border-box !important; }
         .search-container { width: 96% !important; max-width: 100% !important; margin: 0 auto !important; box-sizing: border-box !important; }
         .nav-links, #authContainer { display: flex !important; flex-wrap: wrap !important; justify-content: center !important; align-items: center !important; width: 100% !important; gap: 6px !important; box-sizing: border-box !important; }
         .nav-btn-styled, .navbar a, .navbar button { padding: 6px 12px !important; font-size: 0.85rem !important; margin: 0 !important; white-space: nowrap !important; border-radius: 6px !important; }
 
-        /* Grid & Cart Fixes */
         #medicineGrid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; padding: 10px !important; width: 100% !important; box-sizing: border-box !important; }
         .med-card { margin: 0 !important; width: 100% !important; box-sizing: border-box !important; }
         .med-card-img { height: 140px !important; }
@@ -75,7 +105,6 @@ globalStyles.innerHTML = `
     }
 `;
 document.head.appendChild(globalStyles);
-
 /* =========================================
    1. ⚡ ULTRA-OPTIMIZED CACHE DATABASE LAYER 
    ========================================= */
