@@ -252,16 +252,16 @@ function filterMedicines() {
         let imgSrc = m.image && typeof m.image === 'string' && m.image.trim() !== '' ? m.image.trim() : defaultFallbackImg; if (imgSrc.toLowerCase().startsWith('file:///')) imgSrc = defaultFallbackImg; 
         let rating = 4 + (String(safeId).charCodeAt(0) % 2 || 0); let starHTML = '★'.repeat(rating) + '☆'.repeat(5 - rating); let reviews = Math.floor(safePrice * 0.5) || 15; 
         
-        /* 🛠️ UPGRADED: Added user-select: none to prevent accidental text highlighting, making it feel like a real app button! */
-        return `<div class="med-card" onclick="openProductModal('${safeId}')" style="cursor: pointer; user-select: none; -webkit-user-select: none; transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 20px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
-            ${m.isRx ? '<span class="rx-badge">Rx Required</span>' : ''}
-            <span class="med-tag">${safeCat}</span>
+        /* 🛠️ FIXED: Added pointer-events: none to inner elements so the click GUARANTEES to hit the main card and open the modal! */
+        return `<div class="med-card" onclick="openProductModal('${safeId}')" style="cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 20px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+            ${m.isRx ? '<span class="rx-badge" style="pointer-events: none;">Rx Required</span>' : ''}
+            <span class="med-tag" style="pointer-events: none;">${safeCat}</span>
             
-            <div class="med-image-wrapper">
+            <div class="med-image-wrapper" style="pointer-events: none;">
                 <img src="${imgSrc}" alt="${safeName}" class="med-card-img" loading="lazy" decoding="async" onerror="this.src='${defaultFallbackImg}'">
             </div>
             
-            <div class="med-card-content">
+            <div class="med-card-content" style="pointer-events: none;">
                 <div class="med-name">${safeName}</div>
                 ${m.manufacturer ? `<div style="font-size: 0.85rem; color: #64748b; margin-bottom: 5px;">By ${m.manufacturer}</div>` : ''}
                 <div class="med-rating">${starHTML} <span class="reviews">(${reviews} reviews)</span></div>
