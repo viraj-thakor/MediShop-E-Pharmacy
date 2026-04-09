@@ -250,10 +250,26 @@ function filterMedicines() {
         let safeId = m.id || m._id || Math.random(); let safeName = m.name || 'Unknown Medicine'; let safePrice = parseFloat(m.price) || 0; let safeCat = m.category || 'General'; let safeExp = m.expiry || 'N/A'; 
         let imgSrc = m.image && typeof m.image === 'string' && m.image.trim() !== '' ? m.image.trim() : defaultFallbackImg; if (imgSrc.toLowerCase().startsWith('file:///')) imgSrc = defaultFallbackImg; 
         let rating = 4 + (String(safeId).charCodeAt(0) % 2 || 0); let starHTML = '★'.repeat(rating) + '☆'.repeat(5 - rating); let reviews = Math.floor(safePrice * 0.5) || 15; 
-        return `<div class="med-card">${m.isRx ? '<span class="rx-badge">Rx Required</span>' : ''}<span class="med-tag">${safeCat}</span><div class="med-image-wrapper" onclick="openProductModal('${safeId}')"><img src="${imgSrc}" alt="${safeName}" class="med-card-img" loading="lazy" decoding="async" onerror="this.src='${defaultFallbackImg}'"></div><div class="med-card-content" onclick="openProductModal('${safeId}')" style="cursor: pointer;"><div class="med-name">${safeName}</div>${m.manufacturer ? `<div style="font-size: 0.85rem; color: #64748b; margin-bottom: 5px;">By ${m.manufacturer}</div>` : ''}<div class="med-rating">${starHTML} <span class="reviews">(${reviews} reviews)</span></div><div class="med-meta">Exp: ${safeExp}</div><div class="med-price">₹${safePrice.toFixed(2)}</div></div></div>`; 
+        
+        /* 🛠️ FIXED: Removed Quick View bar, added hover lift effect, and made the whole card clickable! */
+        return `<div class="med-card" onclick="openProductModal('${safeId}')" style="cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 20px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+            ${m.isRx ? '<span class="rx-badge">Rx Required</span>' : ''}
+            <span class="med-tag">${safeCat}</span>
+            
+            <div class="med-image-wrapper">
+                <img src="${imgSrc}" alt="${safeName}" class="med-card-img" loading="lazy" decoding="async" onerror="this.src='${defaultFallbackImg}'">
+            </div>
+            
+            <div class="med-card-content">
+                <div class="med-name">${safeName}</div>
+                ${m.manufacturer ? `<div style="font-size: 0.85rem; color: #64748b; margin-bottom: 5px;">By ${m.manufacturer}</div>` : ''}
+                <div class="med-rating">${starHTML} <span class="reviews">(${reviews} reviews)</span></div>
+                <div class="med-meta">Exp: ${safeExp}</div>
+                <div class="med-price">₹${safePrice.toFixed(2)}</div>
+            </div>
+        </div>`; 
     }).join(''); 
 }
-
 function openProductModal(id) { 
     const product = globalMedicines.find(m => (m.id == id || m._id == id)); if(!product) return; 
     const defaultFallbackImg = "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80"; 
