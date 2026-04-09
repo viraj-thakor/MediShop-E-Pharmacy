@@ -246,13 +246,14 @@ function filterMedicines() {
     if(filtered.length === 0) { grid.innerHTML = "<p style='text-align:center; width:100%; grid-column: 1 / -1; color:#64748b; font-size:1.1rem; padding: 40px;'>No medicines found matching your search.</p>"; return; } 
     
     const defaultFallbackImg = "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=400&q=80"; 
+    
     grid.innerHTML = filtered.map(m => { 
         let safeId = m.id || m._id || Math.random(); let safeName = m.name || 'Unknown Medicine'; let safePrice = parseFloat(m.price) || 0; let safeCat = m.category || 'General'; let safeExp = m.expiry || 'N/A'; 
         let imgSrc = m.image && typeof m.image === 'string' && m.image.trim() !== '' ? m.image.trim() : defaultFallbackImg; if (imgSrc.toLowerCase().startsWith('file:///')) imgSrc = defaultFallbackImg; 
         let rating = 4 + (String(safeId).charCodeAt(0) % 2 || 0); let starHTML = '★'.repeat(rating) + '☆'.repeat(5 - rating); let reviews = Math.floor(safePrice * 0.5) || 15; 
         
-        /* 🛠️ FIXED: Removed Quick View bar, added hover lift effect, and made the whole card clickable! */
-        return `<div class="med-card" onclick="openProductModal('${safeId}')" style="cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 20px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+        /* 🛠️ UPGRADED: Added user-select: none to prevent accidental text highlighting, making it feel like a real app button! */
+        return `<div class="med-card" onclick="openProductModal('${safeId}')" style="cursor: pointer; user-select: none; -webkit-user-select: none; transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 20px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
             ${m.isRx ? '<span class="rx-badge">Rx Required</span>' : ''}
             <span class="med-tag">${safeCat}</span>
             
