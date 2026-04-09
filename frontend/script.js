@@ -1,24 +1,28 @@
 /* =========================================
-   0. 🔴 UI HOTFIX INJECTIONS & SLEEK MOBILE ENGINE (v3)
+   0. 🔴 UI HOTFIX INJECTIONS & SLEEK MOBILE ENGINE (v4)
    ========================================= */
 const globalStyles = document.createElement('style');
 globalStyles.innerHTML = `
     /* 🛑 NUCLEAR FIX FOR HORIZONTAL SCROLLING */
-    html, body {
-        overflow-x: hidden !important;
-        width: 100% !important;
-        max-width: 100vw !important;
-        margin: 0; padding: 0;
-        box-sizing: border-box;
-    }
+    html, body { overflow-x: hidden !important; width: 100% !important; max-width: 100vw !important; margin: 0; padding: 0; box-sizing: border-box; }
     *, *::before, *::after { box-sizing: inherit; }
 
-    #modalImg {
-        width: 100% !important; height: 100% !important; min-height: 300px;
-        object-fit: cover !important; border-radius: 12px;
-        background: #f1f5f9 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="50%" x="50%" dominant-baseline="middle" text-anchor="middle" font-size="6" fill="%2394a3b8">Loading...</text></svg>') center center no-repeat;
-        transition: opacity 0.3s ease-in-out;
+    /* 🛠️ NEW: ADMIN SIDEBAR FULL-HEIGHT FIX */
+    .sidebar {
+        height: 100vh !important;
+        position: sticky !important;
+        top: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow-y: auto !important;
     }
+    /* Push the logout button to the absolute bottom of the screen */
+    .sidebar [onclick*="logout"], .sidebar .logout-btn {
+        margin-top: auto !important;
+        margin-bottom: 20px !important;
+    }
+
+    #modalImg { width: 100% !important; height: 100% !important; min-height: 300px; object-fit: cover !important; border-radius: 12px; background: #f1f5f9 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="50%" x="50%" dominant-baseline="middle" text-anchor="middle" font-size="6" fill="%2394a3b8">Fetching...</text></svg>') center center no-repeat; transition: opacity 0.3s ease-in-out; }
     
     @keyframes popInUI { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     @keyframes rotateSpinner { 100% { transform: rotate(360deg); } }
@@ -27,64 +31,38 @@ globalStyles.innerHTML = `
     @keyframes scaleCheck { 0% { transform: scale(0); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
 
     /* =========================================
-       📱 MOBILE RESPONSIVE ENGINE (Sleek Header Fix)
+       📱 MOBILE RESPONSIVE ENGINE
        ========================================= */
     @media screen and (max-width: 850px) {
-        /* 1. Sleek, Compact Header */
-        header {
-            padding: 10px 5px !important; /* Much smaller padding */
+        /* Fix Admin Sidebar for Mobile (Turns it into a top-menu) */
+        .sidebar {
             height: auto !important;
-        }
-        .navbar, .nav-container {
-            display: flex !important;
-            flex-direction: column !important;
+            min-height: auto !important;
+            position: relative !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
             align-items: center !important;
-            width: 100% !important;
-            gap: 10px !important; /* Tighter spacing */
-            padding: 0 !important;
-            box-sizing: border-box !important;
-        }
-        
-        /* 2. Full-Width Search Bar */
-        .search-container {
-            width: 96% !important;
-            max-width: 100% !important;
-            margin: 0 auto !important;
-            box-sizing: border-box !important;
-        }
-        
-        /* 3. Fix the Cut-Off Buttons */
-        .nav-links, #authContainer {
-            display: flex !important;
-            flex-wrap: wrap !important; /* Forces buttons to drop to a new line if needed */
             justify-content: center !important;
-            align-items: center !important;
-            width: 100% !important;
-            gap: 6px !important; /* Tiny gap to save space */
-            box-sizing: border-box !important;
+            padding: 10px !important;
+            z-index: 100 !important;
         }
-        
-        /* Make buttons perfectly sized for thumbs, but narrow enough to fit */
-        .nav-btn-styled, .navbar a, .navbar button {
-            padding: 6px 12px !important; 
-            font-size: 0.85rem !important; /* Slightly smaller text */
-            margin: 0 !important;
-            white-space: nowrap !important; /* Prevents text inside the button from breaking */
-            border-radius: 6px !important;
+        .sidebar [onclick*="logout"], .sidebar .logout-btn {
+            margin-top: 10px !important;
+            margin-bottom: 10px !important;
+            width: 100% !important;
         }
 
-        /* 4. Fix Medicine Grid */
-        #medicineGrid {
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 10px !important;
-            padding: 10px !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-        }
+        /* Sleek, Compact Header */
+        header { padding: 10px 5px !important; height: auto !important; }
+        .navbar, .nav-container { display: flex !important; flex-direction: column !important; align-items: center !important; width: 100% !important; gap: 10px !important; padding: 0 !important; box-sizing: border-box !important; }
+        .search-container { width: 96% !important; max-width: 100% !important; margin: 0 auto !important; box-sizing: border-box !important; }
+        .nav-links, #authContainer { display: flex !important; flex-wrap: wrap !important; justify-content: center !important; align-items: center !important; width: 100% !important; gap: 6px !important; box-sizing: border-box !important; }
+        .nav-btn-styled, .navbar a, .navbar button { padding: 6px 12px !important; font-size: 0.85rem !important; margin: 0 !important; white-space: nowrap !important; border-radius: 6px !important; }
+
+        /* Grid & Cart Fixes */
+        #medicineGrid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; padding: 10px !important; width: 100% !important; box-sizing: border-box !important; }
         .med-card { margin: 0 !important; width: 100% !important; box-sizing: border-box !important; }
         .med-card-img { height: 140px !important; }
-
-        /* 5. Fix Cart & Modals */
         .cart-container { display: flex !important; flex-direction: column !important; padding: 10px !important; margin: 20px auto !important; width: 100% !important; box-sizing: border-box !important; }
         #cartItemsContainer { width: 100% !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
         .data-table { min-width: 600px !important; }
