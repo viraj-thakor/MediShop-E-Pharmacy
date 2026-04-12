@@ -81,7 +81,6 @@ const DB = {
     async getUsers(force = false) { if (this.cache.users && !force) return this.cache.users; try { const raw = await this.fetchWithCache(`${API_URL}/ms_users`, force); this.cache.users = parseMongooseData(raw); return this.cache.users; } catch(e) { return []; } },
     async saveUsers(data) { try { await fetch(`${API_URL}/ms_users`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); this.cache.users = data; await this.invalidateCache(`${API_URL}/ms_users`); return { success: true }; } catch(e) { return { success: false }; } },
     
-    /* 🛠️ FIXED: Bulletproof Deterministic Data-Healer for Legacy Orders */
     async getOrders(force = false) { 
         if (this.cache.orders && !force) return this.cache.orders; 
         try { 
@@ -90,16 +89,12 @@ const DB = {
             let needsSave = false;
             parsed.forEach((o, i) => {
                 if (!o.id && !o._id) { 
-                    // Generates a stable, permanent ID based on Date & User so it never mutates!
                     const sDate = String(o.date || '').replace(/[^a-zA-Z0-9]/g, '');
                     const sUser = String(o.user || '').replace(/[^a-zA-Z0-9]/g, '');
-                    o.id = `LGCY_${sDate}_${sUser}_${i}`; 
+                    o.id = `LGCY${sDate}${sUser}`; 
                     needsSave = true; 
                 }
-                if (!o.status) { 
-                    o.status = 'Pending'; 
-                    needsSave = true; 
-                }
+                if (!o.status) { o.status = 'Pending'; needsSave = true; }
             });
             if (needsSave && parsed.length > 0) {
                 fetch(`${API_URL}/ms_orders`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(parsed) }).catch(()=>{});
@@ -117,14 +112,13 @@ const DB = {
 };
 
 function optimizeOrdersDB(ordersArray) {
-    if (!Array.isArray(ordersArray)) return ordersArray;
-    if (ordersArray.length > 10) {
-        for (let i = 0; i < ordersArray.length - 10; i++) {
-            if (ordersArray[i].prescriptions && Array.isArray(ordersArray[i].prescriptions)) {
-                ordersArray[i].prescriptions.forEach(rx => { if (rx.data && rx.data.length > 100) rx.data = "archived"; });
-            }
+    if (!Array.isArray(ordersArray)) return [];
+    ordersArray.forEach(o => {
+        if (o.status !== 'Pending' && Array.isArray(o.prescriptions)) {
+            o.prescriptions.forEach(rx => { if (rx.data && rx.data.length > 50) rx.data = "archived"; });
         }
-    }
+    });
+    if(ordersArray.length > 200) return ordersArray.slice(ordersArray.length - 200);
     return ordersArray;
 }
 
@@ -485,9 +479,35 @@ function processRxCheck() {
     } else { pendingOrderData.status = 'Approved'; openPaymentModal(); } 
 }
 
+/* 🛠️ UPGRADED: Massive Image Compression to Prevent Upload Failures */
 function proceedFromMultipleRx() { 
     const cart = JSON.parse(localStorage.getItem('ms_cart')) || []; const rxItems = cart.filter(i => i.isRx); let allValid = true; let filePromises = [];
-    rxItems.forEach(item => { const fileInput = document.getElementById(`rxFile_${item.id}`); if(!fileInput || !fileInput.files[0]) { allValid = false; } else { const file = fileInput.files[0]; const promise = new Promise((resolve) => { const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const MAX_WIDTH = 800; const scaleSize = MAX_WIDTH / img.width; canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); const compressedData = canvas.toDataURL('image/jpeg', 0.7); resolve({ itemId: item.id, name: item.name, data: compressedData }); }; img.src = e.target.result; }; reader.readAsDataURL(file); }); filePromises.push(promise); } });
+    rxItems.forEach(item => { 
+        const fileInput = document.getElementById(`rxFile_${item.id}`); 
+        if(!fileInput || !fileInput.files[0]) { allValid = false; } else { 
+            const file = fileInput.files[0]; 
+            const promise = new Promise((resolve) => { 
+                const reader = new FileReader(); 
+                reader.onload = (e) => { 
+                    const img = new Image(); 
+                    img.onload = () => { 
+                        const canvas = document.createElement('canvas'); 
+                        const MAX_WIDTH = 400; // Heavily scale down image width
+                        const scaleSize = MAX_WIDTH / img.width; 
+                        canvas.width = MAX_WIDTH; 
+                        canvas.height = img.height * scaleSize; 
+                        const ctx = canvas.getContext('2d'); 
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height); 
+                        const compressedData = canvas.toDataURL('image/jpeg', 0.4); // Aggressive quality compression
+                        resolve({ itemId: item.id, name: item.name, data: compressedData }); 
+                    }; 
+                    img.src = e.target.result; 
+                }; 
+                reader.readAsDataURL(file); 
+            }); 
+            filePromises.push(promise); 
+        } 
+    });
     if(!allValid) return showToast("Please upload a prescription image for EVERY required medicine!", 'error'); 
     showToast("Compressing & Validating Rx...", "info");
     Promise.all(filePromises).then(results => { pendingOrderData.prescriptions = results; pendingOrderData.status = 'Pending'; document.getElementById('dynamicRxModal').style.display = 'none'; openPaymentModal(); });
@@ -568,7 +588,7 @@ async function renderUserProfile() {
         document.getElementById('profileAddress').innerHTML = addrText;
     }
 
-    const allOrders = await DB.getOrders(); const userOrders = allOrders.filter(o => o && o.user === user.name).reverse(); const tbody = document.getElementById('userOrdersBody'); if(!tbody) return; if(userOrders.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:#64748b;">No orders found. Start shopping to see history here!</td></tr>'; return; } tbody.innerHTML = userOrders.map(o => { let badgeClass = ''; let badgeText = o.status; if(o.status === 'Pending') { badgeClass = 'status-pending'; badgeText = 'Processing Rx'; } else if(o.status === 'Approved') { badgeClass = 'status-approved'; badgeText = 'Completed'; } else { badgeClass = 'status-rejected'; badgeText = 'Cancelled'; } let itemList = o.items.map(i => `<span style="display:inline-block; background:#e2e8f0; padding:2px 8px; border-radius:4px; font-size:0.85rem; margin:2px;">${i.qty}x ${i.name}</span>`).join(' '); return `<tr><td><span class="order-id" style="font-weight:bold; color:#0f172a;">#${(o.id || o._id || 'ORD').toString().replace('LGCY_','').slice(-6).toUpperCase()}</span><br><span class="order-date" style="font-size:0.85rem; color:#64748b;">${o.date}</span></td><td>${itemList}</td><td class="order-total" style="font-weight:bold; color:#0f766e;">₹${parseFloat(o.total).toFixed(2)}</td><td><span class="status-badge ${badgeClass}" style="padding:5px 10px; border-radius:6px; font-size:0.85rem; font-weight:bold; background:${o.status==='Pending'?'#fef08a':(o.status==='Approved'?'#bbf7d0':'#fecaca')}; color:${o.status==='Pending'?'#92400e':(o.status==='Approved'?'#166534':'#991b1b')};">${badgeText}</span></td></tr>`; }).join(''); 
+    const allOrders = await DB.getOrders(); const userOrders = allOrders.filter(o => o && o.user === user.name).reverse(); const tbody = document.getElementById('userOrdersBody'); if(!tbody) return; if(userOrders.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:#64748b;">No orders found. Start shopping to see history here!</td></tr>'; return; } tbody.innerHTML = userOrders.map(o => { let badgeClass = ''; let badgeText = o.status; if(o.status === 'Pending') { badgeClass = 'status-pending'; badgeText = 'Processing Rx'; } else if(o.status === 'Approved') { badgeClass = 'status-approved'; badgeText = 'Completed'; } else { badgeClass = 'status-rejected'; badgeText = 'Cancelled'; } let itemList = o.items.map(i => `<span style="display:inline-block; background:#e2e8f0; padding:2px 8px; border-radius:4px; font-size:0.85rem; margin:2px;">${i.qty}x ${i.name}</span>`).join(' '); return `<tr><td><span class="order-id" style="font-weight:bold; color:#0f172a;">#${(o.id || o._id || 'ORD').toString().replace('LGCY','').slice(-6).toUpperCase()}</span><br><span class="order-date" style="font-size:0.85rem; color:#64748b;">${o.date}</span></td><td>${itemList}</td><td class="order-total" style="font-weight:bold; color:#0f766e;">₹${parseFloat(o.total).toFixed(2)}</td><td><span class="status-badge ${badgeClass}" style="padding:5px 10px; border-radius:6px; font-size:0.85rem; font-weight:bold; background:${o.status==='Pending'?'#fef08a':(o.status==='Approved'?'#bbf7d0':'#fecaca')}; color:${o.status==='Pending'?'#92400e':(o.status==='Approved'?'#166534':'#991b1b')};">${badgeText}</span></td></tr>`; }).join(''); 
 }
 
 function openEditProfileModal() { const user = JSON.parse(localStorage.getItem('ms_currentUser')); if(document.getElementById('editEmail')) document.getElementById('editEmail').value = user.email || ''; if(document.getElementById('editMobile')) document.getElementById('editMobile').value = user.mobile || ''; if(document.getElementById('editAddress')) document.getElementById('editAddress').value = user.address || ''; document.getElementById('editProfileModal').style.display = 'flex'; }
@@ -632,6 +652,7 @@ function updateAdminSidebarBadge(count) {
 let globalOrdersForAdmin = []; 
 let previousOrdersString = '';
 
+/* 🛠️ FIXED: Safe String Parsing protects against empty table crashes */
 async function renderAdminDashboard(forceServerRefresh = true) {
     const drawUI = (meds, allSales, orders) => {
         const currentOrdersString = JSON.stringify(orders);
@@ -676,75 +697,51 @@ async function renderAdminDashboard(forceServerRefresh = true) {
         updateChart('daily', sales);
 
         let pendingBody = document.getElementById('pendingOrdersBody');
-        if (!pendingBody) {
-            const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5'));
-            const targetHeading = headings.find(h => h.innerText && (h.innerText.toUpperCase().includes('CUSTOMER ORDERS') || h.innerText.toUpperCase().includes('USER ORDERS')));
-            
-            if (targetHeading) {
-                const wrapper = targetHeading.parentElement;
-                let sibling = targetHeading.nextElementSibling;
-                while (sibling) { let next = sibling.nextElementSibling; sibling.remove(); sibling = next; }
-                
-                const tableWrapper = document.createElement('div');
-                tableWrapper.style.cssText = 'overflow-x: auto; margin-top: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;';
-                tableWrapper.innerHTML = `
-                    <table style="width: 100%; border-collapse: collapse; min-width: 900px;">
-                        <thead style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
-                            <tr>
-                                <th style="padding: 15px; text-align: left; color: #64748b; font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">Order Details</th>
-                                <th style="padding: 15px; text-align: left; color: #64748b; font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">Customer & Delivery</th>
-                                <th style="padding: 15px; text-align: left; color: #64748b; font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">Items & Payment Info</th>
-                                <th style="padding: 15px; text-align: center; color: #64748b; font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">Prescription</th>
-                                <th style="padding: 15px; text-align: center; color: #64748b; font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pendingOrdersBody"></tbody>
-                    </table>
-                `;
-                wrapper.appendChild(tableWrapper);
-                pendingBody = document.getElementById('pendingOrdersBody');
-            }
-        }
-
         if(pendingBody) {
             const pendingOrders = globalOrdersForAdmin.filter(o => o.status === 'Pending').sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
             pendingBody.innerHTML = pendingOrders.length ? pendingOrders.slice(0, 50).map(o => { 
-                if (!o) return '';
-                let safeId = o.id || o._id || 'UNKNOWN'; 
-                let safeIdStr = safeId.toString();
-                
-                let displayId = safeIdStr.includes('LGCY') ? safeIdStr.split('_')[1].slice(-6).toUpperCase() : safeIdStr.slice(-6).toUpperCase();
-                
-                let safeTotal = parseFloat(o.total) || 0; 
-                let safeItems = Array.isArray(o.items) ? o.items : [];
-                let itemList = safeItems.map(i => `${i.name || 'Item'} (x${i.qty || 1})`).join(', ');
-                
-                let rxButton = ''; 
-                if (Array.isArray(o.prescriptions) && o.prescriptions.length > 0) { 
-                    rxButton = `<div style="display:flex; flex-direction:column; gap:8px;">`; 
-                    o.prescriptions.forEach(rx => { 
-                        rxButton += `<button onclick="viewSpecificRx('${safeId}', '${rx.itemId}')" class="view-rx-btn" style="padding:6px 12px; font-size:0.85rem; background:#eff6ff; color:#3b82f6; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'"><i class="fas fa-file-medical"></i> Rx: ${rx.name || 'View'}</button>`; 
-                    }); 
-                    rxButton += `</div>`; 
-                } else { 
-                    rxButton = `<span style="color:#94a3b8; font-weight:600; font-size:0.95rem;">Not Required</span>`; 
-                }
+                try {
+                    if (!o) return '';
+                    let safeId = o.id || o._id || 'UNKNOWN'; 
+                    let safeIdStr = String(safeId);
+                    
+                    let displayId = safeIdStr.slice(-6).toUpperCase();
+                    if(displayId.length < 3) displayId = 'ORD' + Math.floor(Math.random() * 1000);
+                    
+                    let safeTotal = parseFloat(o.total) || 0; 
+                    let safeItems = Array.isArray(o.items) ? o.items : [];
+                    let itemList = safeItems.map(i => `${i.name || 'Item'} (x${i.qty || 1})`).join(', ');
+                    
+                    let rxButton = ''; 
+                    if (Array.isArray(o.prescriptions) && o.prescriptions.length > 0) { 
+                        rxButton = `<div style="display:flex; flex-direction:column; gap:8px;">`; 
+                        o.prescriptions.forEach(rx => { 
+                            rxButton += `<button onclick="viewSpecificRx('${safeId}', '${rx.itemId}')" class="view-rx-btn" style="padding:6px 12px; font-size:0.85rem; background:#eff6ff; color:#3b82f6; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'"><i class="fas fa-file-medical"></i> Rx: ${rx.name || 'View'}</button>`; 
+                        }); 
+                        rxButton += `</div>`; 
+                    } else { 
+                        rxButton = `<span style="color:#94a3b8; font-weight:600; font-size:0.95rem;">Not Required</span>`; 
+                    }
 
-                let safeStatus = o.status || 'Pending';
-                let actionContent = ''; 
-                if(safeStatus === 'Pending') { 
-                    actionContent = `<button onclick="approveOrder(this, '${safeId}')" style="background:#10b981; color:white; border:none; padding:8px 12px; border-radius:6px; margin-bottom:8px; width:100%; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'"><i class="fas fa-check"></i> Approve</button><button onclick="rejectOrder(this, '${safeId}')" style="background:#ef4444; color:white; border:none; padding:8px 12px; border-radius:6px; width:100%; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'"><i class="fas fa-times"></i> Reject</button>`; 
-                } else if (safeStatus === 'Approved') { 
-                    actionContent = `<div style="background:#d1fae5; color:#059669; padding:8px; border-radius:6px; font-weight:800; font-size:1rem; text-align:center;"><i class="fas fa-check-circle"></i> Accepted</div>`; 
-                } else { 
-                    actionContent = `<div style="background:#fee2e2; color:#dc2626; padding:8px; border-radius:6px; font-weight:800; font-size:1rem; text-align:center;"><i class="fas fa-times-circle"></i> Rejected</div>`; 
+                    let safeStatus = o.status || 'Pending';
+                    let actionContent = ''; 
+                    if(safeStatus === 'Pending') { 
+                        actionContent = `<button onclick="approveOrder(this, '${safeId}')" style="background:#10b981; color:white; border:none; padding:8px 12px; border-radius:6px; margin-bottom:8px; width:100%; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'"><i class="fas fa-check"></i> Approve</button><button onclick="rejectOrder(this, '${safeId}')" style="background:#ef4444; color:white; border:none; padding:8px 12px; border-radius:6px; width:100%; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'"><i class="fas fa-times"></i> Reject</button>`; 
+                    } else if (safeStatus === 'Approved') { 
+                        actionContent = `<div style="background:#d1fae5; color:#059669; padding:8px; border-radius:6px; font-weight:800; font-size:1rem; text-align:center;"><i class="fas fa-check-circle"></i> Accepted</div>`; 
+                    } else { 
+                        actionContent = `<div style="background:#fee2e2; color:#dc2626; padding:8px; border-radius:6px; font-weight:800; font-size:1rem; text-align:center;"><i class="fas fa-times-circle"></i> Rejected</div>`; 
+                    }
+                    
+                    let safePayment = String(o.payment || 'Credit Card');
+                    let payIcon = safePayment.toLowerCase().includes('cash') ? '<i class="fas fa-money-bill-wave" style="color:#10b981;"></i>' : '<i class="fas fa-credit-card" style="color:#3b82f6;"></i>';
+                    
+                    return `<tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.3s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'"><td style="vertical-align: top; padding: 15px;"><div style="color:#0f766e; font-size:1.05rem; font-weight: 800; margin-bottom: 4px;">ORD-${displayId}</div><div style="color:#64748b; font-size: 0.85rem; margin-bottom: 8px;">${o.date || ''}</div><div style="font-weight:900; font-size:1.2rem; color:#1e293b;">₹${safeTotal.toFixed(2)}</div></td><td style="vertical-align: top; padding: 15px;"><div style="font-weight:bold; color:#1e293b; margin-bottom: 6px; font-size:1.05rem;">${o.user || 'Unknown'}</div><div style="color:#475569; font-size: 0.9rem; margin-bottom: 4px; display:flex; align-items:center; gap:6px;"><i class="fas fa-envelope" style="color:#94a3b8; width: 14px;"></i> ${o.email || 'N/A'}</div><div style="color:#475569; font-size: 0.9rem; margin-bottom: 4px; display:flex; align-items:center; gap:6px;"><i class="fas fa-phone-alt" style="color:#94a3b8; width: 14px;"></i> ${o.mobile || 'N/A'}</div><div style="color:#475569; font-size: 0.9rem; display:flex; align-items:flex-start; gap:6px;"><i class="fas fa-map-marker-alt" style="color:#ef4444; width: 14px; margin-top:3px;"></i> <span style="line-height:1.4;">${o.address || 'N/A'}</span></div></td><td style="vertical-align: top; padding: 15px; max-width: 250px;"><div style="color:#334155; font-size:0.95rem; line-height: 1.5; margin-bottom: 12px; font-weight:500;">${itemList}</div><div style="color:#1e293b; font-weight:700; font-size: 0.9rem; background: #f1f5f9; padding: 6px 10px; border-radius: 6px; display:inline-flex; align-items:center; gap:8px;">${payIcon} ${safePayment}</div></td><td style="vertical-align: middle; padding: 15px; text-align:center;">${rxButton}</td><td style="vertical-align: middle; padding: 15px;">${actionContent}</td></tr>`; 
+                } catch (e) {
+                    console.error("Order map error skipped.", e);
+                    return '';
                 }
-                
-                let safePayment = String(o.payment || 'Credit Card');
-                let payIcon = safePayment.toLowerCase().includes('cash') ? '<i class="fas fa-money-bill-wave" style="color:#10b981;"></i>' : '<i class="fas fa-credit-card" style="color:#3b82f6;"></i>';
-                
-                return `<tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.3s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'"><td style="vertical-align: top; padding: 15px;"><div style="color:#0f766e; font-size:1.05rem; font-weight: 800; margin-bottom: 4px;">ORD-${displayId}</div><div style="color:#64748b; font-size: 0.85rem; margin-bottom: 8px;">${o.date || ''}</div><div style="font-weight:900; font-size:1.2rem; color:#1e293b;">₹${safeTotal.toFixed(2)}</div></td><td style="vertical-align: top; padding: 15px;"><div style="font-weight:bold; color:#1e293b; margin-bottom: 6px; font-size:1.05rem;">${o.user || 'Unknown'}</div><div style="color:#475569; font-size: 0.9rem; margin-bottom: 4px; display:flex; align-items:center; gap:6px;"><i class="fas fa-envelope" style="color:#94a3b8; width: 14px;"></i> ${o.email || 'N/A'}</div><div style="color:#475569; font-size: 0.9rem; margin-bottom: 4px; display:flex; align-items:center; gap:6px;"><i class="fas fa-phone-alt" style="color:#94a3b8; width: 14px;"></i> ${o.mobile || 'N/A'}</div><div style="color:#475569; font-size: 0.9rem; display:flex; align-items:flex-start; gap:6px;"><i class="fas fa-map-marker-alt" style="color:#ef4444; width: 14px; margin-top:3px;"></i> <span style="line-height:1.4;">${o.address || 'N/A'}</span></div></td><td style="vertical-align: top; padding: 15px; max-width: 250px;"><div style="color:#334155; font-size:0.95rem; line-height: 1.5; margin-bottom: 12px; font-weight:500;">${itemList}</div><div style="color:#1e293b; font-weight:700; font-size: 0.9rem; background: #f1f5f9; padding: 6px 10px; border-radius: 6px; display:inline-flex; align-items:center; gap:8px;">${payIcon} ${safePayment}</div></td><td style="vertical-align: middle; padding: 15px; text-align:center;">${rxButton}</td><td style="vertical-align: middle; padding: 15px;">${actionContent}</td></tr>`; 
             }).join('') : '<tr><td colspan="5" style="text-align:center; padding:50px; color:#64748b; font-size:1.1rem; background:#f8fafc;"><i class="fas fa-check-circle" style="font-size:3rem; color:#10b981; margin-bottom:15px; display:block;"></i>All caught up! No pending orders.</td></tr>';
         }
         
@@ -794,7 +791,6 @@ function viewSpecificRx(orderId, itemId) {
     } 
 }
 
-/* 🛠️ UPGRADED: Wait Timer to guarantee you see the "Accepted" message before clearing it */
 async function approveOrder(btnElement, oid) { 
     btnElement.disabled = true;
     btnElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing';
@@ -806,7 +802,6 @@ async function approveOrder(btnElement, oid) {
 
         let idx = orders.findIndex(o => o && (String(o.id) === String(oid) || String(o._id) === String(oid))); 
         
-        // 🛠️ EXTREME FALLBACK: If ID lookup fails, find by matching exact date and user
         if (idx === -1) {
             const targetOrder = globalOrdersForAdmin.find(o => String(o.id) === String(oid));
             if (targetOrder) {
